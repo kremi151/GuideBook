@@ -1,16 +1,19 @@
 package com.creysys.guideBook.plugin.vanilla.recipe;
 
+import java.util.ArrayList;
+
 import com.creysys.guideBook.api.DrawableRecipe;
 import com.creysys.guideBook.api.IGuiAccessor;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.translation.I18n;
-
-import java.util.ArrayList;
 
 /**
  * Created by Creysys on 27 Mar 16.
@@ -33,7 +36,7 @@ public class DrawableRecipeInfo extends DrawableRecipe {
     public DrawableRecipeInfo(ItemStack stack, String localizationKey) {
         this.stack = stack.copy();
 
-        FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
+        FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
         String[] words = I18n.translateToLocal(localizationKey).split(" ");
 
         final int maxLineWIdth = 120;
@@ -61,8 +64,8 @@ public class DrawableRecipeInfo extends DrawableRecipe {
     }
 
     @Override
-    public ItemStack[] getInput() {
-        return new ItemStack[0];
+    public NonNullList<Ingredient> getInput() {
+        return NonNullList.withSize(0, Ingredient.EMPTY);
     }
 
     @Override

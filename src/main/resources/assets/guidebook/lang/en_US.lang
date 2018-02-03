@@ -4,7 +4,7 @@ key.guidebook.recipe=Show recipes of item
 key.guidebook.usage=Show usages of item
 
 #Items
-item.guideBook.name=Guide Book
+item.guidebook.name=Guide Book
 
 #Gui
 guidebook.search=Search

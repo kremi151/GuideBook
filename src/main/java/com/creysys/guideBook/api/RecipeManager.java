@@ -1,11 +1,12 @@
 package com.creysys.guideBook.api;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTUtil;
-import net.minecraftforge.oredict.OreDictionary;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.nbt.NBTUtil;
+import net.minecraftforge.oredict.OreDictionary;
 
 /**
  * Created by Creysys on 21 Mar 16.
@@ -57,8 +58,9 @@ public final class RecipeManager {
     public static boolean hasUsages(ItemStack stack) {
         for (ArrayList<DrawableRecipe> recipes : loadedRecipes.values())
             for (DrawableRecipe recipe : recipes)
-                for (ItemStack s : recipe.getInput())
-                    if (equalItems(s, stack)) return true;
+            	for(Ingredient ingredient : recipe.getInput())
+	                for (ItemStack s : ingredient.getMatchingStacks())
+	                    if (equalItems(s, stack)) return true;
         return false;
     }
 }

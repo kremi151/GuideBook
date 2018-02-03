@@ -1,11 +1,15 @@
 package com.creysys.guideBook.plugin.vanilla.recipe;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.creysys.guideBook.GuideBookMod;
 import com.creysys.guideBook.api.DrawableRecipe;
 import com.creysys.guideBook.api.IGuiAccessor;
 import com.creysys.guideBook.api.RecipeManager;
 import com.creysys.guideBook.common.helpers.ItemStackHelper;
 import com.creysys.guideBook.network.message.MessagePutItemsInWorkbench;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
@@ -14,19 +18,13 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.ShapedRecipes;
-import net.minecraft.item.crafting.ShapelessRecipes;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import net.minecraftforge.oredict.ShapedOreRecipe;
-import net.minecraftforge.oredict.ShapelessOreRecipe;
-
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.List;
+import net.minecraftforge.common.crafting.IShapedRecipe;
 
 /**
  * Created by Creysys on 21 Mar 16.
@@ -34,67 +32,28 @@ import java.util.List;
 public class DrawableRecipeCrafting extends DrawableRecipe {
 
     public static final ResourceLocation craftingGridTexture = new ResourceLocation("guidebook", "textures/gui/craftinggrid.png");
-
+    
     @SuppressWarnings("unchecked")
     public static DrawableRecipeCrafting parse(IRecipe recipe) {
-        if(recipe instanceof ShapedRecipes) {
-            ShapedRecipes r = (ShapedRecipes) recipe;
-            return new DrawableRecipeCrafting(r.getRecipeOutput(), r.recipeItems, r.recipeWidth);
-        } else if(recipe instanceof ShapelessRecipes) {
-            ShapelessRecipes r = (ShapelessRecipes) recipe;
-            return new DrawableRecipeCrafting(r.getRecipeOutput(), r.recipeItems.toArray(new ItemStack[0]), 3);
-        } else if(recipe instanceof ShapedOreRecipe) {
-            ShapedOreRecipe r = (ShapedOreRecipe) recipe;
-            ArrayList<ItemStack> ret = new ArrayList<ItemStack>();
-            for (Object obj : r.getInput()) {
-                if(obj instanceof ItemStack) {
-                    ret.add((ItemStack) obj);
-                } else if(obj instanceof List) {
-                    List<ItemStack> l = (List<ItemStack>) obj;
-                    if (l.size() == 0) return null;
-                    ret.add(l.get(0));
-                } else if(obj == null) {
-                    ret.add(null);
-                } else return null;
-            }
-
-            int width = ReflectionHelper.getPrivateValue(ShapedOreRecipe.class, r, 4);
-
-            return new DrawableRecipeCrafting(r.getRecipeOutput(), ret.toArray(new ItemStack[0]), width);
-        } else if(recipe instanceof ShapelessOreRecipe) {
-            ShapelessOreRecipe r = (ShapelessOreRecipe) recipe;
-            ArrayList<ItemStack> ret = new ArrayList<ItemStack>();
-            for (Object obj : r.getInput()) {
-                if(obj instanceof ItemStack) {
-                    ret.add((ItemStack) obj);
-                } else if(obj instanceof List) {
-                    List<ItemStack> l = (List<ItemStack>) obj;
-                    if (l.size() == 0) return null;
-                    ret.add(l.get(0));
-                } else if(obj == null) {
-                    ret.add(null);
-                } else return null;
-            }
-
-            return new DrawableRecipeCrafting(r.getRecipeOutput(), ret.toArray(new ItemStack[0]), 3);
-        }
+    	if(!recipe.isDynamic()) {
+    		final int width = (recipe instanceof IShapedRecipe) ? ((IShapedRecipe)recipe).getRecipeWidth() : 3;
+            
+            return new DrawableRecipeCrafting(recipe.getRecipeOutput(), recipe.getIngredients(), width);
+    	}
 
         return null;
     }
 
-    public ItemStack output;
-    public ItemStack[] input;
-    public int width;
+    public final ItemStack output;
+    public final NonNullList<Ingredient> input;
+    public final int width;
 
     private List<Integer> missing;
     private int flashUntil;
 
-    public DrawableRecipeCrafting(ItemStack output, ItemStack[] input, int width) {
+    public DrawableRecipeCrafting(ItemStack output, NonNullList<Ingredient> input, int width) {
         this.output = output.copy();
-        this.input = new ItemStack[input.length];
-        for(int i = 0; i < input.length; i++){
-            if(input[i] != null) this.input[i] = input[i].copy();
-        }
+        this.input = input;
         this.width = width;
 
         this.missing = null;
@@ -102,7 +61,7 @@ public class DrawableRecipeCrafting extends DrawableRecipe {
     }
 
     @Override
-    public ItemStack[] getInput() {
+    public NonNullList<Ingredient> getInput() {
         return input;
     }
 
@@ -149,7 +108,7 @@ public class DrawableRecipeCrafting extends DrawableRecipe {
     }
 
     public boolean containsItem(ItemStack[] inventory, ItemStack stack, ArrayList<Integer> used) {
-        if (stack == null){
+        if (stack == null || stack.isEmpty()){
             used.add(null);
             return true;
         }
@@ -165,8 +124,14 @@ public class DrawableRecipeCrafting extends DrawableRecipe {
     }
 
     public void canPlayerCraft(ItemStack[] inventory, ArrayList<Integer> missing, ArrayList<Integer> used){
-        for (int i = 0; i < input.length; i++) {
-            if (!containsItem(inventory, input[i], used)) missing.add(i);
+        for (int i = 0; i < input.size(); i++) {
+        	Ingredient ingredient = input.get(i);
+        	if(ingredient != null) {
+            	ItemStack matching[] = ingredient.getMatchingStacks();
+                if(matching.length > 0 && !containsItem(inventory, matching[ticks / 20 % (matching.length)], used)) {
+                	missing.add(i);
+                }
+        	}
         }
     }
 
@@ -213,10 +178,12 @@ public class DrawableRecipeCrafting extends DrawableRecipe {
         Gui.drawModalRectWithCustomSizedTexture(left, top, 0, 0, 112, 54, 126, 54);
 
         drawItemStack(gui, output, left + 91, top + 19, true);
-        for(int i = 0; i < input.length; i++)
-            if(input[i] != null)
-                drawItemStack(gui, input[i], left + (i % width) * 18 + 1, top + i / width * 18 + 1, false);
-
+        for(int i = 0; i < input.size(); i++) {
+        	Ingredient ingredient = input.get(i);
+            if(ingredient != null) {
+            	drawIngredient(gui, ingredient, left + (i % width) * 18 + 1, top + i / width * 18 + 1, false);
+            }
+        }
     }
 
     private void drawRecipeTooltip(IGuiAccessor gui, int left, int top, int mouseX, int mouseY) {
@@ -247,11 +214,15 @@ public class DrawableRecipeCrafting extends DrawableRecipe {
         }
 
         drawItemStackTooltip(gui, output, left + 91, top + 19, mouseX, mouseY);
-        for(int i = 0; i < input.length; i++) {
-            if(input[i] != null) {
-                int x = left + (i % width) * 18 + 1;
-                int y = top + i / width * 18 + 1;
-                drawItemStackTooltip(gui, input[i], x, y, mouseX, mouseY);
+        for(int i = 0; i < input.size(); i++) {
+        	Ingredient ingredient = input.get(i);
+            if(ingredient != null) {
+            	ItemStack matching[] = ingredient.getMatchingStacks();
+                if(matching.length > 0) {
+	                int x = left + (i % width) * 18 + 1;
+	                int y = top + i / width * 18 + 1;
+	                drawItemStackTooltip(gui, matching[ticks / 20 % (matching.length)], x, y, mouseX, mouseY);
+                }
             }
         }
     }
@@ -265,11 +236,15 @@ public class DrawableRecipeCrafting extends DrawableRecipe {
         }
 
         clickItemStack(gui, output,left + 91, top + 19, mouseX, mouseY, mouseButton);
-        for(int i = 0; i < input.length; i++) {
-            if(input[i] != null) {
-                int x = left + (i % width) * 18 + 1;
-                int y = top + i / width * 18 + 1;
-                clickItemStack(gui, input[i], x, y, mouseX, mouseY, mouseButton);
+        for(int i = 0; i < input.size(); i++) {
+        	Ingredient ingredient = input.get(i);
+            if(ingredient != null) {
+            	ItemStack matching[] = ingredient.getMatchingStacks();
+                if(matching.length > 0) {
+                	int x = left + (i % width) * 18 + 1;
+                    int y = top + i / width * 18 + 1;
+                    clickItemStack(gui, matching[ticks / 20 % (matching.length)], x, y, mouseX, mouseY, mouseButton);
+                }
             }
         }
     }

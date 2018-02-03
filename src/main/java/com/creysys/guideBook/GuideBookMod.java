@@ -6,14 +6,14 @@ import com.creysys.guideBook.common.GuiBookContainer;
 import com.creysys.guideBook.common.items.ItemGuideBook;
 import com.creysys.guideBook.common.proxy.ProxyServer;
 import com.creysys.guideBook.network.message.MessagePutItemsInWorkbench;
-import com.creysys.guideBook.plugin.PluginThaumcraft;
 import com.creysys.guideBook.plugin.vanilla.PluginVanilla;
+
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.item.ItemStack;
+import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.RegistryEvent.MissingMappings.Mapping;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -23,7 +23,6 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 
 @Mod(modid = GuideBookMod.MODID, version = GuideBookMod.VERSION)
@@ -58,7 +57,7 @@ public class GuideBookMod
     public static final String MODID = "guidebook";
     public static final String VERSION = "1.7.0";
 
-    public static ItemGuideBook guideBook;
+    public static final ItemGuideBook guideBook = new ItemGuideBook();
 
     @Mod.Instance
     public static GuideBookMod instance;
@@ -83,10 +82,6 @@ public class GuideBookMod
             //if(Loader.isModLoaded("thaumcraft")) PluginThaumcraft.preInit();
         }
 
-
-        guideBook = new ItemGuideBook();
-        GameRegistry.addShapedRecipe(new ItemStack(guideBook), "b", "c", 'b', Items.BOOK, 'c', Blocks.CRAFTING_TABLE);
-
         proxy.registerHandlers();
     }
 
@@ -98,10 +93,21 @@ public class GuideBookMod
     }
 
     @EventHandler
-    public void postIinit(FMLPostInitializationEvent event) {
+    public void postInit(FMLPostInitializationEvent event) {
         if(event.getSide() == Side.CLIENT){
             PluginVanilla.postInit();
             RecipeManager.load();
         }
     }
+	
+	private final ResourceLocation OLD_GUIDEBOOK_ID = new ResourceLocation(MODID, "guideBook");
+	
+	@EventHandler
+	public void onMissingItemMappings(RegistryEvent.MissingMappings<Item> event){
+		for(Mapping<Item> mapping : event.getMappings()) {
+			if(mapping.key.equals(OLD_GUIDEBOOK_ID)) {
+				mapping.remap(guideBook);
+			}
+		}
+	}
 }

@@ -14,9 +14,11 @@ import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.RenderItem;
+import net.minecraft.client.util.ITooltipFlag.TooltipFlags;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.text.translation.I18n;
@@ -100,7 +102,7 @@ public class GuideBookGui extends GuiContainer implements IGuiAccessor {
 
         public StateHome() {
             super(null);
-            searchBar = new GuiTextField(0, fontRendererObj, left + 38, top + 22, 110, 16);
+            searchBar = new GuiTextField(0, fontRenderer, left + 38, top + 22, 110, 16);
             searchBar.setFocused(true);
             updateSearchResult();
             page = 0;
@@ -157,7 +159,7 @@ public class GuideBookGui extends GuiContainer implements IGuiAccessor {
 
         @Override
         public void draw(int mouseX, int mouseY) {
-            fontRendererObj.drawString(I18n.translateToLocal("guidebook.search"), left + 38, top + 10, 0xAA1111);
+            fontRenderer.drawString(I18n.translateToLocal("guidebook.search"), left + 38, top + 10, 0xAA1111);
 
             RenderHelper.disableStandardItemLighting();
             drawRect(left + 38, top + 36, left + 38 + 110, top + 42 + 110, 0x99555555);
@@ -188,7 +190,7 @@ public class GuideBookGui extends GuiContainer implements IGuiAccessor {
                     int x = left + 40 + (i % itemsPerRow) * itemSize;
                     int y = top + 42 + i / itemsPerRow * itemSize - page * itemSize * 6;
 
-                    List<String> lines = searchResult.get(i).getTooltip(Minecraft.getMinecraft().player, false);
+                    List<String> lines = searchResult.get(i).getTooltip(Minecraft.getMinecraft().player, TooltipFlags.NORMAL);
                     if(x < mouseX && mouseX < x + itemSize && y < mouseY && mouseY < y + itemSize) drawHoveringText(lines, mouseX, mouseY);
                 }
             }
@@ -215,8 +217,8 @@ public class GuideBookGui extends GuiContainer implements IGuiAccessor {
             if (mouseButton == 0) {
                 previous.mouseClicked(mouseX, mouseY);
                 next.mouseClicked(mouseX, mouseY);
-            } else if(mouseButton == 1 && searchBar.xPosition < mouseX && mouseX < searchBar.xPosition + searchBar.width
-                    && searchBar.yPosition < mouseY && mouseY < searchBar.yPosition + searchBar.height){
+            } else if(mouseButton == 1 && searchBar.x < mouseX && mouseX < searchBar.x + searchBar.width
+                    && searchBar.y < mouseY && mouseY < searchBar.y + searchBar.height){
                 searchBar.setText("");
                 updateSearchResult();
             }
@@ -463,12 +465,13 @@ public class GuideBookGui extends GuiContainer implements IGuiAccessor {
     public ArrayList<DrawableRecipe> getRecipesWith(ArrayList<DrawableRecipe> recipes, ItemStack stack) {
         ArrayList<DrawableRecipe> ret = new ArrayList<DrawableRecipe>();
         for (DrawableRecipe recipe : recipes)
-            for (ItemStack input : recipe.getInput())
-                if (input != null && input.getItem() != null)
-                    if (RecipeManager.equalItems(input, stack) || (input.getItemDamage() == OreDictionary.WILDCARD_VALUE && input.getItem() == stack.getItem())) {
-                        ret.add(recipe);
-                        break;
-                    }
+        	for (Ingredient ingredient : recipe.getInput())
+	            for (ItemStack input : ingredient.getMatchingStacks())
+	                if (input != null && input.getItem() != null)
+	                    if (RecipeManager.equalItems(input, stack) || (input.getItemDamage() == OreDictionary.WILDCARD_VALUE && input.getItem() == stack.getItem())) {
+	                        ret.add(recipe);
+	                        break;
+	                    }
         return ret;
     }
 
@@ -550,7 +553,7 @@ public class GuideBookGui extends GuiContainer implements IGuiAccessor {
     }
 
     public RenderItem getRenderItem() { return itemRender; }
-    public FontRenderer getFontRenderer() { return fontRendererObj; }
+    public FontRenderer getFontRenderer() { return fontRenderer; }
     public Minecraft getMc(){return mc;}
     public int getLeft(){return left;}
     public int getTop(){return top;}
@@ -613,8 +616,8 @@ public class GuideBookGui extends GuiContainer implements IGuiAccessor {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        drawDefaultBackground();
         super.drawScreen(mouseX, mouseY, partialTicks);
-
         state.drawForeground(mouseX, mouseY);
     }
 

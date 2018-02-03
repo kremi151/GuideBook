@@ -2,10 +2,13 @@ package com.creysys.guideBook.plugin.vanilla.recipe;
 
 import com.creysys.guideBook.api.DrawableRecipe;
 import com.creysys.guideBook.api.IGuiAccessor;
+
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 
 /**
@@ -25,8 +28,8 @@ public class DrawableRecipeSmelting extends DrawableRecipe {
     }
 
     @Override
-    public ItemStack[] getInput() {
-        return new ItemStack[] { input };
+    public NonNullList<Ingredient> getInput() {
+        return NonNullList.from(Ingredient.EMPTY, Ingredient.fromStacks(input));
     }
 
     @Override

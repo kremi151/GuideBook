@@ -2,10 +2,13 @@ package com.creysys.guideBook.plugin.vanilla.recipe;
 
 import com.creysys.guideBook.api.DrawableRecipe;
 import com.creysys.guideBook.api.IGuiAccessor;
+
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 
 /**
@@ -13,7 +16,7 @@ import net.minecraft.util.ResourceLocation;
  */
 public class DrawableRecipeBrewing extends DrawableRecipe {
 
-    public static final ResourceLocation brewingGridTexture = new ResourceLocation("guidebook", "textures/gui/brewingGrid.png");
+    public static final ResourceLocation brewingGridTexture = new ResourceLocation("guidebook", "textures/gui/brewinggrid.png");
     public static final ItemStack blazeRod = new ItemStack(Items.BLAZE_POWDER);
 
     public ItemStack input;
@@ -27,8 +30,8 @@ public class DrawableRecipeBrewing extends DrawableRecipe {
     }
 
     @Override
-    public ItemStack[] getInput() {
-        return new ItemStack[]{input, ingredient, blazeRod};
+    public NonNullList<Ingredient> getInput() {
+        return NonNullList.from(Ingredient.EMPTY, Ingredient.fromStacks(input, ingredient, blazeRod));
     }
 
     @Override

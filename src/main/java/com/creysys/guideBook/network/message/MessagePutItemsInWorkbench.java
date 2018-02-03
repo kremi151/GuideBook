@@ -96,7 +96,7 @@ public class MessagePutItemsInWorkbench implements IMessage {
                         
                         if(playerStack.getCount() == 0)
                         {
-                        	entityPlayer.inventory.mainInventory.remove(used[i]);
+                        	entityPlayer.inventory.mainInventory.remove(used[i].intValue());
                         }
 
                         container.craftMatrix.setInventorySlotContents(i, stackUsed);
@@ -129,7 +129,7 @@ public class MessagePutItemsInWorkbench implements IMessage {
 
         @Override
         public IMessage onMessage(final MessagePutItemsInWorkbench message, final MessageContext ctx) {
-            final EntityPlayer player = ctx.getServerHandler().playerEntity;
+            final EntityPlayer player = ctx.getServerHandler().player;
 
             final WorldServer mainThread = (WorldServer)player.world;
             mainThread.addScheduledTask(new Runnable() {

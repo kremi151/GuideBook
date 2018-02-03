@@ -1,17 +1,20 @@
 package com.creysys.guideBook.plugin.vanilla.recipe.handler;
 
+import java.util.ArrayList;
+
 import com.creysys.guideBook.api.DrawableRecipe;
 import com.creysys.guideBook.api.RecipeHandler;
 import com.creysys.guideBook.plugin.vanilla.recipe.DrawableRecipeCrafting;
+
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.potion.PotionType;
 import net.minecraft.potion.PotionUtils;
-
-import java.util.ArrayList;
+import net.minecraft.util.NonNullList;
 
 /**
  * Created by Creysys on 21 Mar 16.
@@ -23,6 +26,8 @@ public class RecipeHandlerCrafting extends RecipeHandler {
 
     public void addTippedArrowRecipes(ArrayList<DrawableRecipe> list) {
         ItemStack arrow = new ItemStack(Items.ARROW);
+        
+        final Ingredient arrowIngredient = Ingredient.fromStacks(arrow);
 
         for (PotionType type : PotionType.REGISTRY) {
             ItemStack input = new ItemStack(Items.LINGERING_POTION);
@@ -30,8 +35,11 @@ public class RecipeHandlerCrafting extends RecipeHandler {
 
             ItemStack output = new ItemStack(Items.TIPPED_ARROW, 8);
             PotionUtils.addPotionToItemStack(output, type);
+            
+            NonNullList<Ingredient> recipe = NonNullList.withSize(9, arrowIngredient);
+            recipe.set(4, Ingredient.fromStacks(output));
 
-            list.add(new DrawableRecipeCrafting(output, new ItemStack[]{arrow, arrow, arrow, arrow, input, arrow, arrow, arrow, arrow}, 3));
+            list.add(new DrawableRecipeCrafting(output, recipe, 3));
         }
     }
 
@@ -53,9 +61,11 @@ public class RecipeHandlerCrafting extends RecipeHandler {
     @Override
     public ArrayList<DrawableRecipe> getRecipes() {
         ArrayList<DrawableRecipe> ret = new ArrayList<DrawableRecipe>();
-        for (IRecipe recipe : CraftingManager.getInstance().getRecipeList()) {
+        for (IRecipe recipe : CraftingManager.REGISTRY) {
             DrawableRecipeCrafting r = DrawableRecipeCrafting.parse(recipe);
-            if(r != null) ret.add(r);
+            if(r != null) {
+            	ret.add(r);
+            }
         }
 
         addFireworkRecipes(ret);

@@ -1,6 +1,7 @@
 package com.creysys.guideBook.common.items;
 
 import com.creysys.guideBook.GuideBookMod;
+
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -9,7 +10,6 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 /**
  * Created by Creysys on 20 Mar 16.
@@ -18,15 +18,12 @@ public class ItemGuideBook extends Item {
     public ItemGuideBook(){
         super();
 
-        String name = "guideBook";
+        final String name = "guidebook";
 
         setRegistryName(name);
         setUnlocalizedName(name);
         setMaxStackSize(1);
         setCreativeTab(CreativeTabs.MISC);
-
-
-        GameRegistry.register(this);
     }
 
 

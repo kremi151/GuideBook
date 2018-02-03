@@ -5,8 +5,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.oredict.OreDictionary;
 
-import java.util.ArrayList;
-
 /**
  * Created by Creysys on 07 Apr 16.
  */
@@ -18,7 +16,7 @@ public final class ItemStackHelper {
 
         if(stack.getItemDamage() == OreDictionary.WILDCARD_VALUE) {
             if (stack.getHasSubtypes()) {
-                stack.getItem().getSubItems(stack.getItem(), (CreativeTabs)null, ret);
+                stack.getItem().getSubItems((CreativeTabs)null, ret);
             }
             else {
                 stack = stack.copy();
