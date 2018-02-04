@@ -217,12 +217,9 @@ public class DrawableRecipeCrafting extends DrawableRecipe {
         for(int i = 0; i < input.size(); i++) {
         	Ingredient ingredient = input.get(i);
             if(ingredient != null) {
-            	ItemStack matching[] = ingredient.getMatchingStacks();
-                if(matching.length > 0) {
-	                int x = left + (i % width) * 18 + 1;
-	                int y = top + i / width * 18 + 1;
-	                drawItemStackTooltip(gui, matching[ticks / 20 % (matching.length)], x, y, mouseX, mouseY);
-                }
+            	int x = left + (i % width) * 18 + 1;
+                int y = top + i / width * 18 + 1;
+                drawIngredientTooltip(gui, ingredient, x, y, mouseX, mouseY);
             }
         }
     }
@@ -239,12 +236,9 @@ public class DrawableRecipeCrafting extends DrawableRecipe {
         for(int i = 0; i < input.size(); i++) {
         	Ingredient ingredient = input.get(i);
             if(ingredient != null) {
-            	ItemStack matching[] = ingredient.getMatchingStacks();
-                if(matching.length > 0) {
-                	int x = left + (i % width) * 18 + 1;
-                    int y = top + i / width * 18 + 1;
-                    clickItemStack(gui, matching[ticks / 20 % (matching.length)], x, y, mouseX, mouseY, mouseButton);
-                }
+            	int x = left + (i % width) * 18 + 1;
+                int y = top + i / width * 18 + 1;
+                clickIngredient(gui, ingredient, x, y, mouseX, mouseY, mouseButton);
             }
         }
     }
