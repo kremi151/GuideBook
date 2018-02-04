@@ -17,21 +17,21 @@ import net.minecraft.util.ResourceLocation;
 public class DrawableRecipeBrewing extends DrawableRecipe {
 
     public static final ResourceLocation brewingGridTexture = new ResourceLocation("guidebook", "textures/gui/brewinggrid.png");
-    public static final ItemStack blazeRod = new ItemStack(Items.BLAZE_POWDER);
+    public static final Ingredient blazeRod = Ingredient.fromStacks(new ItemStack(Items.BLAZE_POWDER));
 
     public ItemStack input;
-    public ItemStack ingredient;
+    public Ingredient ingredient;
     public ItemStack output;
 
-    public DrawableRecipeBrewing(ItemStack input, ItemStack ingredient, ItemStack output) {
+    public DrawableRecipeBrewing(ItemStack input, Ingredient ingredient, ItemStack output) {
         this.input = input.copy();
-        this.ingredient = ingredient.copy();
+        this.ingredient = ingredient;
         this.output = output.copy();
     }
 
     @Override
     public NonNullList<Ingredient> getInput() {
-        return NonNullList.from(Ingredient.EMPTY, Ingredient.fromStacks(input, ingredient, blazeRod));
+        return NonNullList.from(Ingredient.EMPTY, Ingredient.fromStacks(input), ingredient, blazeRod);
     }
 
     @Override
@@ -78,11 +78,11 @@ public class DrawableRecipeBrewing extends DrawableRecipe {
         drawItemStack(gui, input, left + 35, top + 43, false);
         drawItemStack(gui, input, left + 58, top + 36, false);
 
-        drawItemStack(gui, ingredient, left + 35, top + 2, false);
+        drawIngredient(gui, ingredient, left + 35, top + 2, false);
 
         drawItemStack(gui, output, left + 86, top + 8, true);
 
-        drawItemStack(gui, blazeRod, left + 1, top + 1, false);
+        drawIngredient(gui, blazeRod, left + 1, top + 1, false);
     }
 
     public void drawRecipeTooltip(IGuiAccessor gui, int left, int top, int mouseX, int mouseY) {
@@ -90,11 +90,11 @@ public class DrawableRecipeBrewing extends DrawableRecipe {
         drawItemStackTooltip(gui, input, left + 35, top + 43, mouseX, mouseY);
         drawItemStackTooltip(gui, input, left + 58, top + 36, mouseX, mouseY);
 
-        drawItemStackTooltip(gui, ingredient, left + 35, top + 2, mouseX, mouseY);
+        drawIngredientTooltip(gui, ingredient, left + 35, top + 2, mouseX, mouseY);
 
         drawItemStackTooltip(gui, output, left + 86, top + 8, mouseX, mouseY);
 
-        drawItemStackTooltip(gui, blazeRod, left + 1, top + 1, mouseX, mouseY);
+        drawIngredientTooltip(gui, blazeRod, left + 1, top + 1, mouseX, mouseY);
     }
 
     public void clickRecipe(IGuiAccessor gui, int left, int top, int mouseX, int mouseY, int mouseButton) {
@@ -102,10 +102,10 @@ public class DrawableRecipeBrewing extends DrawableRecipe {
         clickItemStack(gui, input, left + 35, top + 43, mouseX, mouseY, mouseButton);
         clickItemStack(gui, input, left + 58, top + 36, mouseX, mouseY, mouseButton);
 
-        clickItemStack(gui, ingredient, left + 35, top + 2, mouseX, mouseY, mouseButton);
+        clickIngredient(gui, ingredient, left + 35, top + 2, mouseX, mouseY, mouseButton);
 
         clickItemStack(gui, output, left + 86, top + 8, mouseX, mouseY, mouseButton);
 
-        clickItemStack(gui, blazeRod, left + 1, top + 1, mouseX, mouseY, mouseButton);
+        clickIngredient(gui, blazeRod, left + 1, top + 1, mouseX, mouseY, mouseButton);
     }
 }

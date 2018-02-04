@@ -1,7 +1,5 @@
 package com.creysys.guideBook.api;
 
-import java.util.List;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.util.ITooltipFlag.TooltipFlags;
@@ -19,10 +17,6 @@ public abstract class DrawableRecipe {
 
     public void update() { ticks++; }
 
-    public void drawOres(IGuiAccessor gui, List<ItemStack> ores, int x, int y, boolean showAmount){
-
-    }
-
     public void drawItemStack(IGuiAccessor gui, ItemStack stack, int x, int y, boolean showAmount) {
         if(stack.getItemDamage() == OreDictionary.WILDCARD_VALUE) {
             if (stack.getHasSubtypes()) {
@@ -31,7 +25,7 @@ public abstract class DrawableRecipe {
                 if(subItems.size() > 0) {
                 	int index = ticks / 20 % (subItems.size());
                     stack = subItems.get(index);
-                }else {//TODO: Handle this case
+                }else {
                 	stack = stack.copy();
                     stack.setItemDamage(0);
                 }
@@ -67,9 +61,13 @@ public abstract class DrawableRecipe {
             if (stack.getHasSubtypes()) {
             	NonNullList<ItemStack> subItems = NonNullList.<ItemStack>create();
                 stack.getItem().getSubItems((CreativeTabs)null, subItems);
-                int index = ticks / 20 % (subItems.size());
-
-                stack = subItems.get(index);
+                if(subItems.size() > 0) {
+                	int index = ticks / 20 % (subItems.size());
+                    stack = subItems.get(index);
+                }else {
+                	stack = stack.copy();
+                    stack.setItemDamage(0);
+                }
             }
             else {
                 stack = stack.copy();
@@ -80,8 +78,17 @@ public abstract class DrawableRecipe {
         if(x < mouseX && mouseX < x + 18 && y < mouseY && mouseY < y + 18) gui.drawHoveringStrings(stack.getTooltip(Minecraft.getMinecraft().player, TooltipFlags.NORMAL), mouseX, mouseY);
     }
 
-    public void drawOresTooltip(IGuiAccessor gui, List<ItemStack> ores, int x, int y, int mouseX, int mouseY) {
+    public void drawIngredientTooltip(IGuiAccessor gui, Ingredient ingredient, int x, int y, int mouseX, int mouseY) {
+    	ItemStack matching[] = ingredient.getMatchingStacks();
+        ItemStack stack;
+        if(matching.length == 0) {
+        	stack = ItemStack.EMPTY;
+        }else {
+        	final int index = ticks / 20 % (matching.length);
+            stack = matching[index];
+        }
 
+        if(x < mouseX && mouseX < x + 18 && y < mouseY && mouseY < y + 18) gui.drawHoveringStrings(stack.getTooltip(Minecraft.getMinecraft().player, TooltipFlags.NORMAL), mouseX, mouseY);
     }
 
     public void clickItemStack(IGuiAccessor gui, ItemStack stack, int x, int y, int mouseX, int mouseY, int mouseButton) {
@@ -89,9 +96,13 @@ public abstract class DrawableRecipe {
             if (stack.getHasSubtypes()) {
             	NonNullList<ItemStack> subItems = NonNullList.<ItemStack>create();
                 stack.getItem().getSubItems((CreativeTabs)null, subItems);
-                int index = ticks / 20 % (subItems.size());
-
-                stack = subItems.get(index);
+                if(subItems.size() > 0) {
+                	int index = ticks / 20 % (subItems.size());
+                    stack = subItems.get(index);
+                }else {
+                	stack = stack.copy();
+                    stack.setItemDamage(0);
+                }
             }
             else {
                 stack = stack.copy();
@@ -105,8 +116,20 @@ public abstract class DrawableRecipe {
         }
     }
 
-    public void clickOres(IGuiAccessor gui, List<ItemStack> ores, int x, int y, int mouseX, int mouseY, int mouseButton) {
+    public void clickIngredient(IGuiAccessor gui, Ingredient ingredient, int x, int y, int mouseX, int mouseY, int mouseButton) {
+    	ItemStack matching[] = ingredient.getMatchingStacks();
+        ItemStack stack;
+        if(matching.length == 0) {
+        	stack = ItemStack.EMPTY;
+        }else {
+        	final int index = ticks / 20 % (matching.length);
+            stack = matching[index];
+        }
 
+        if(x < mouseX && mouseX < x + 18 && y < mouseY && mouseY < y + 18){
+            if(mouseButton == 0) gui.openRecipeState(stack);
+            else if(mouseButton == 1) gui.openUsageState(stack);
+        }
     }
 
     public abstract NonNullList<Ingredient> getInput();

@@ -16,7 +16,7 @@ public final class PluginVanilla {
     public static void preInit() {
             RecipeManager.registerHandler(new RecipeHandlerCrafting());
             RecipeManager.registerHandler(new RecipeHandlerSmelting());
-            //TODO: Fix and enable again RecipeManager.registerHandler(new RecipeHandlerBrewing());
+            RecipeManager.registerHandler(new RecipeHandlerBrewing());
 
             ItemInfoManager.setBlockInfo(Blocks.DISPENSER, 0, "guidebook.info.dispenser");
             ItemInfoManager.setBlockInfo(Blocks.NOTEBLOCK, 0, "guidebook.info.noteBlock");

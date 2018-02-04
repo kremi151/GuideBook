@@ -23,6 +23,29 @@ public final class RecipeManager {
         if(!stack0.hasTagCompound()) return true;
         return NBTUtil.areNBTEquals(stack0.getTagCompound(), stack1.getTagCompound(), false);
     }
+    
+    public static boolean equalIngredients(Ingredient ingredient0, Ingredient ingredient1) {
+    	ItemStack stacks0[] = ingredient0.getMatchingStacks();
+    	ItemStack stacks1[] = ingredient1.getMatchingStacks();
+    	if(stacks0.length == stacks1.length) {
+    		boolean equalities[] = new boolean[stacks0.length];
+        	for(int i = 0 ; i < stacks0.length ; i++) {
+        		boolean found = false;
+        		for(int j = 0 ; j < stacks1.length ; j++) {
+        			if(equalItems(stacks0[i], stacks1[j])) {
+        				equalities[i] = true;
+        				found = true;
+        				break;
+        			}
+        		}
+        		if(!found)return false;
+        	}
+        	for(int i = 0 ; i < equalities.length ; i++)
+        		if(!equalities[i])return false;
+        	return true;
+    	}
+    	return false;
+    }
 
     public static boolean equalItems(ItemStack stack0, ItemStack stack1) {
         if(stack0 == null ||stack1 == null) return false;

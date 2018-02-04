@@ -1,26 +1,28 @@
 package com.creysys.guideBook.plugin.vanilla.recipe.handler;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.creysys.guideBook.api.DrawableRecipe;
 import com.creysys.guideBook.api.RecipeHandler;
 import com.creysys.guideBook.api.RecipeManager;
 import com.creysys.guideBook.plugin.vanilla.recipe.DrawableRecipeBrewing;
+
 import net.minecraft.init.Items;
 import net.minecraft.init.PotionTypes;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.potion.PotionHelper;
 import net.minecraft.potion.PotionType;
 import net.minecraft.potion.PotionUtils;
+import net.minecraft.util.NonNullList;
 import net.minecraftforge.common.brewing.AbstractBrewingRecipe;
 import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
 import net.minecraftforge.common.brewing.IBrewingRecipe;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.oredict.OreDictionary;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Creysys on 26 Mar 16.
@@ -41,55 +43,41 @@ public class RecipeHandlerBrewing extends RecipeHandler {
         return 2;
     }
 
-    public boolean containsIngredient(ItemStack ingredient, ArrayList<ItemStack> ingredients) {
-        for (ItemStack i : ingredients)
-            if (i.isItemEqual(ingredient)) return true;
+    public boolean containsIngredient(Ingredient ingredient, NonNullList<Ingredient> ingredients) {
+        for (Ingredient i : ingredients)
+            if (RecipeManager.equalIngredients(i, ingredient)) return true;
         return false;
     }
 
-    public void addIngredients(ArrayList<ItemStack> ingredients, ArrayList<Object> list) {
-        try {
-            Class c1 = Class.forName("net.minecraft.potion.PotionHelper$MixPredicate");
-            Class c2 = Class.forName("net.minecraft.potion.PotionHelper$ItemPredicateInstance");
-            Field fieldPredicate = c1.getDeclaredFields()[1];
-            Field fieldItem = c2.getDeclaredFields()[0];
-            Field fieldMeta = c2.getDeclaredFields()[1];
+    public void addIngredients(NonNullList<Ingredient> ingredients, List<Object> list) {
+    	Field fieldReagent = PotionHelper.MixPredicate.class.getDeclaredFields()[1];
+    	fieldReagent.setAccessible(true);
+    	try {
+    		for (Object o : list) {
+                if(o.getClass() != PotionHelper.MixPredicate.class) continue;
 
-            fieldPredicate.setAccessible(true);
-            fieldItem.setAccessible(true);
-            fieldMeta.setAccessible(true);
-
-            for (Object o : list) {
-                if(!o.getClass().getName().equals("net.minecraft.potion.PotionHelper$MixPredicate")) continue;
-
-                Object predicate = fieldPredicate.get(o);
-                if(!predicate.getClass().getName().equals("net.minecraft.potion.PotionHelper$ItemPredicateInstance")) continue;
-
-                Item item = (Item) fieldItem.get(predicate);
-                int meta = (Integer) fieldMeta.get(predicate);
-                if(meta == -1) meta = 0;
-
-                ItemStack ingredient = new ItemStack(item, 1, meta);
+                Ingredient ingredient = (Ingredient) fieldReagent.get(o);
+                
                 if(!containsIngredient(ingredient, ingredients)) ingredients.add(ingredient);
             }
-        } catch (Exception e) {
-            FMLCommonHandler.instance().raiseException(e, "addIngredients", true);
-        }
+    	} catch (Exception e) {
+    		FMLCommonHandler.instance().raiseException(e, "addIngredients", true);
+    	}
     }
 
     public boolean containsRecipe(DrawableRecipeBrewing recipe, ArrayList<DrawableRecipe> recipes) {
         for (DrawableRecipe dr : recipes) {
             DrawableRecipeBrewing r = (DrawableRecipeBrewing)dr;
-            if(RecipeManager.equalItems(r.input, recipe.input) && RecipeManager.equalItems(r.ingredient, recipe.ingredient)) return true;
+            if(RecipeManager.equalItems(r.input, recipe.input) && RecipeManager.equalIngredients(r.ingredient, recipe.ingredient)) return true;
         }
         return false;
     }
 
     public void addVanillaBrewingRecipes(ArrayList<DrawableRecipe> recipes) {
-        ArrayList<ItemStack> ingredients = new ArrayList<ItemStack>();
+        NonNullList<Ingredient> ingredients = NonNullList.create();
 
-        ArrayList<Object> typeConversions = ReflectionHelper.getPrivateValue(PotionHelper.class, null, 0);
-        ArrayList<Object> itemConversions = ReflectionHelper.getPrivateValue(PotionHelper.class, null, 1);
+        List<Object> typeConversions = ReflectionHelper.getPrivateValue(PotionHelper.class, null, 0);
+        List<Object> itemConversions = ReflectionHelper.getPrivateValue(PotionHelper.class, null, 1);
 
         addIngredients(ingredients, typeConversions);
         addIngredients(ingredients, itemConversions);
@@ -113,36 +101,41 @@ public class RecipeHandlerBrewing extends RecipeHandler {
         } while (foundNewPotions);
     }
 
-    private List<ItemStack> getNewPotions(ArrayList<ItemStack> knownPotions, ArrayList<ItemStack> potionIngredients, ArrayList<DrawableRecipe> recipes) {
+    private List<ItemStack> getNewPotions(ArrayList<ItemStack> knownPotions, NonNullList<Ingredient> potionIngredients, ArrayList<DrawableRecipe> recipes) {
         List<ItemStack> newPotions = new ArrayList<ItemStack>();
         for (ItemStack potionInput : knownPotions) {
-            for (ItemStack potionIngredient : potionIngredients) {
-                ItemStack potionOutput = PotionHelper.doReaction(potionIngredient, potionInput.copy());
-                if (potionOutput == null) {
-                    continue;
-                }
+            for (Ingredient potionIngredient : potionIngredients) {
+            	for(ItemStack referenceInput : potionIngredient.getMatchingStacks()) {
+            		if(!referenceInput.isEmpty()) {
+            			 ItemStack potionOutput = PotionHelper.doReaction(referenceInput, potionInput.copy());
+                         if (potionOutput == null) {
+                             continue;
+                         }
 
-                if (potionInput.getItem() == potionOutput.getItem()) {
-                    PotionType potionOutputType = PotionUtils.getPotionFromItem(potionOutput);
-                    if (potionOutputType == PotionTypes.WATER)
-                    {
-                        continue;
-                    }
+                         if (potionInput.getItem() == potionOutput.getItem()) {
+                             PotionType potionOutputType = PotionUtils.getPotionFromItem(potionOutput);
+                             if (potionOutputType == PotionTypes.WATER)
+                             {
+                                 continue;
+                             }
 
-                    PotionType potionInputType = PotionUtils.getPotionFromItem(potionInput);
-                    int inputId = PotionType.REGISTRY.getIDForObject(potionInputType);
-                    int outputId = PotionType.REGISTRY.getIDForObject(potionOutputType);
-                    if (inputId == outputId)
-                    {
-                        continue;
-                    }
-                }
+                             PotionType potionInputType = PotionUtils.getPotionFromItem(potionInput);
+                             int inputId = PotionType.REGISTRY.getIDForObject(potionInputType);
+                             int outputId = PotionType.REGISTRY.getIDForObject(potionOutputType);
+                             if (inputId == outputId)
+                             {
+                                 continue;
+                             }
+                         }
 
-                DrawableRecipeBrewing recipe = new DrawableRecipeBrewing(potionInput, potionIngredient, potionOutput);
-                if (!containsRecipe(recipe, recipes)) {
-                    recipes.add(recipe);
-                    newPotions.add(potionOutput);
-                }
+                         DrawableRecipeBrewing recipe = new DrawableRecipeBrewing(potionInput, potionIngredient, potionOutput);
+                         if (!containsRecipe(recipe, recipes)) {
+                             recipes.add(recipe);
+                             newPotions.add(potionOutput);
+                         }
+                         break;
+            		}
+            	}
             }
         }
         return newPotions;
@@ -158,17 +151,17 @@ public class RecipeHandlerBrewing extends RecipeHandler {
         for (IBrewingRecipe iBrewingRecipe : BrewingRecipeRegistry.getRecipes())
             if (iBrewingRecipe instanceof AbstractBrewingRecipe) {
                 AbstractBrewingRecipe recipe = (AbstractBrewingRecipe) iBrewingRecipe;
-                ItemStack ingredient;
-                if (recipe.getIngredient() instanceof ItemStack) ingredient = (ItemStack) recipe.getIngredient();
+                Ingredient ingredient;
+                if (recipe.getIngredient() instanceof ItemStack) ingredient = Ingredient.fromStacks((ItemStack) recipe.getIngredient());
                 else if (recipe.getIngredient() instanceof List) {
                     List<ItemStack> ores = (List<ItemStack>) recipe.getIngredient();
                     if (ores.size() == 0) continue;
-                    ingredient = ores.get(0);
+                    ingredient = Ingredient.fromStacks(ores.toArray(new ItemStack[ores.size()]));
                 }
                 else if (recipe.getIngredient() instanceof String) {
                     List<ItemStack> ores = OreDictionary.getOres((String) recipe.getIngredient());
                     if (ores.size() == 0) continue;
-                    ingredient = ores.get(0);
+                    ingredient = Ingredient.fromStacks(ores.toArray(new ItemStack[ores.size()]));
                 } else continue;
                 ret.add(new DrawableRecipeBrewing(recipe.getInput(), ingredient, recipe.getOutput()));
             }
