@@ -99,15 +99,5 @@ public class GuideBookMod
             RecipeManager.load();
         }
     }
-	
-	private final ResourceLocation OLD_GUIDEBOOK_ID = new ResourceLocation(MODID, "guideBook");
-	
-	@EventHandler
-	public void onMissingItemMappings(RegistryEvent.MissingMappings<Item> event){
-		for(Mapping<Item> mapping : event.getMappings()) {
-			if(mapping.key.equals(OLD_GUIDEBOOK_ID)) {
-				mapping.remap(guideBook);
-			}
-		}
-	}
+    
 }
