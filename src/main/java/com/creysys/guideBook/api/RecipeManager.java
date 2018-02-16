@@ -16,6 +16,11 @@ public final class RecipeManager {
     public static LinkedHashMap<RecipeHandler, ArrayList<DrawableRecipe>> loadedRecipes;
     public static ArrayList<ItemStack> craftableItems;
 
+    /**
+     * Registers a new recipe handler within Guide Book.
+     * Prefer using the {@link RegisterRecipeHandlersEvent} event to register handlers
+     */
+    @Deprecated
     public static void registerHandler(RecipeHandler handler) { handlers.add(handler); }
 
     public static boolean equalNBT(ItemStack stack0, ItemStack stack1) {

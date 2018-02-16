@@ -1,6 +1,7 @@
 package com.creysys.guideBook;
 
 import com.creysys.guideBook.api.RecipeManager;
+import com.creysys.guideBook.api.RegisterRecipeHandlersEvent;
 import com.creysys.guideBook.client.GuideBookGui;
 import com.creysys.guideBook.common.GuiBookContainer;
 import com.creysys.guideBook.common.items.ItemGuideBook;
@@ -9,11 +10,8 @@ import com.creysys.guideBook.network.message.MessagePutItemsInWorkbench;
 import com.creysys.guideBook.plugin.vanilla.PluginVanilla;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.event.RegistryEvent.MissingMappings.Mapping;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -96,6 +94,7 @@ public class GuideBookMod
     public void postInit(FMLPostInitializationEvent event) {
         if(event.getSide() == Side.CLIENT){
             PluginVanilla.postInit();
+            MinecraftForge.EVENT_BUS.post(new RegisterRecipeHandlersEvent());
             RecipeManager.load();
         }
     }
